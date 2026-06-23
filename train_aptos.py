@@ -374,7 +374,7 @@ def main():
 
         if va_acc > best_acc:
             best_acc = va_acc
-            ckpt = os.path.join(args.output, "best.pth")
+            ckpt = os.path.join(args.output, "bestVIT.pth")
             torch.save(
                 {"epoch": epoch, "state_dict": model.state_dict(), "acc": best_acc, "args": vars(args)},
                 ckpt,
@@ -388,7 +388,7 @@ def main():
     # --------------------------------------------------------------------------- #
     print("\n---------------------------------------------------------------------------")
     print("Reparameterizing the best model for efficient deployment...")
-    ckpt_path = os.path.join(args.output, "best.pth")
+    ckpt_path = os.path.join(args.output, "bestVIT.pth")
     if os.path.exists(ckpt_path):
         checkpoint = torch.load(ckpt_path, map_location="cpu")
         
