@@ -327,7 +327,15 @@ def main():
     parser.add_argument("--label-smoothing", type=float, default=0.1)
     parser.add_argument("--seed", type=int, default=42)
     parser.add_argument("--output", default="./output_aptos", help="Where to save checkpoints")
+    # Weights & Biases
+    parser.add_argument("--use-wandb", action="store_true", help="Enable Weights & Biases logging")
+    parser.add_argument("--wandb-project", default="fastvit-aptos", help="W&B project name")
+    parser.add_argument("--wandb-run-name", default="", help="W&B run name")
     args = parser.parse_args()
+
+    if args.use_wandb:
+        import wandb
+        wandb.init(project=args.wandb_project, name=args.wandb_run_name if args.wandb_run_name else None, config=args)
 
     torch.manual_seed(args.seed)
     os.makedirs(args.output, exist_ok=True)
@@ -389,6 +397,16 @@ def main():
             f"lr {optimizer.param_groups[0]['lr']:.2e} | {dt:.1f}s"
         )
 
+        if args.use_wandb:
+            wandb.log({
+                "epoch": epoch + 1,
+                "train_loss": tr_loss,
+                "train_acc": tr_acc,
+                "val_loss": va_loss,
+                "val_acc": va_acc,
+                "lr": optimizer.param_groups[0]['lr']
+            })
+
         if va_acc > best_acc:
             best_acc = va_acc
             ckpt = os.path.join(args.output, "bestVIT.pth")
@@ -399,6 +417,9 @@ def main():
             print(f"  -> saved new best ({best_acc:.4f}) to {ckpt}")
 
     print(f"Training completed. Best val accuracy: {best_acc:.4f}")
+    if args.use_wandb:
+        wandb.run.summary["best_val_acc"] = best_acc
+        wandb.finish()
 
     # --------------------------------------------------------------------------- #
     # Reparameterize & Export Model
