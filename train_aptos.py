@@ -24,7 +24,24 @@ from torchvision import transforms
 from torchvision.datasets import ImageFolder
 
 # Make sure we can import the model from the current directory
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+model_found = False
+if '__file__' in globals():
+    path_cand = os.path.dirname(os.path.abspath(__file__))
+    if os.path.exists(os.path.join(path_cand, "model.py")):
+        sys.path.insert(0, path_cand)
+        model_found = True
+
+if not model_found and os.path.exists("model.py"):
+    sys.path.insert(0, os.getcwd())
+    model_found = True
+
+if not model_found:
+    for root, dirs, files in os.walk(os.getcwd()):
+        if "model.py" in files:
+            sys.path.insert(0, root)
+            model_found = True
+            break
+
 from model import fast_vit, reparameterize_model  # noqa: E402
 
 IMAGENET_MEAN = (0.485, 0.456, 0.406)
